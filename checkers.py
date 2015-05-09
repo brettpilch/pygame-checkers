@@ -23,62 +23,88 @@ class Game:
 		"""
 		self.status = 'playing'
 		self.turn = 0
-		self.players = ['X','O']
+		self.players = ['x','o']
 		rando = random.randrange(0,2)
 		self.ai = self.players[rando]
 		self.human = self.players[1 - rando]
 		self.selected_token = None
 		pygame.display.set_caption("%s's turn" % self.players[self.turn % 2])
-		self.game_board = [['X','-','X','-','X','-','X','-'],
-						   ['-','X','-','X','-','X','-','X'],
-			  			   ['X','-','X','-','X','-','X','-'],
+		self.game_board = [['x','-','x','-','x','-','x','-'],
+						   ['-','x','-','x','-','x','-','x'],
+			  			   ['x','-','x','-','x','-','x','-'],
 						   ['-','-','-','-','-','-','-','-'],
 						   ['-','-','-','-','-','-','-','-'],
-						   ['-','O','-','O','-','O','-','O'],
-						   ['O','-','O','-','O','-','O','-'],
-						   ['-','O','-','O','-','O','-','O']]
+						   ['-','o','-','o','-','o','-','o'],
+						   ['o','-','o','-','o','-','o','-'],
+						   ['-','o','-','o','-','o','-','o']]
 
 	def is_empty(self, row, column):
 		return self.game_board[row][column] == '-'
 
 	def evaluate_click(self, mouse_pos):
 		"""
-		Play in a square if it is empty.
+		Select a token if none is selected.
+		Move token to a square if it is a valid move.
 		Start a new game if the game is over.
 		"""
 		if self.status == 'playing':
 			row, column = get_clicked_row(mouse_pos), get_clicked_column(mouse_pos)
 			if self.selected_token:
-				if self.is_valid_move(self.players[self.turn % 2], self.selected_token, row, column):
-					self.play(self.players[self.turn % 2], self.selected_token, row, column)
+				move = self.is_valid_move(self.players[self.turn % 2], self.selected_token, row, column)
+				if move[0]:
+					self.play(self.players[self.turn % 2], self.selected_token, row, column, move[1])
 				elif row == self.selected_token[0] and col == self.selected_token[1]:
 					self.selected_token = None
 				else:
 					print 'invalid move'
 			else:
-				if self.game_board[row][col] == self.players[self.turn % 2]:
+				if self.game_board[row][col].lower() == self.players[self.turn % 2]:
 					self.selected_token = [row, col]
 		elif self.status == 'game over':
 			self.__init__()
 
 	def is_valid_move(self, player, token_location, to_row, to_col):
+		"""
+		Check if clicked location is a valid square for player to move to.
+		"""
 		from_row = token_location[0]
 		from_col = token_location[1]
+		token_char = self.game_board[from_row][from_col]
 		if self.game_board[to_row][to_col] != '-':
-			return False
-		if abs(from_row - to_row) == 1 and abs(from_col - to_col) == 1: return True
+			return False, None
+		if (((token_char.isupper() and abs(from_row - to_row) == 1) or (player == 'x' and to_row - from_row == 1) or
+			 (player == 'o' and from_row - to_row == 1)) and abs(from_col - to_col) == 1):
+			return True, None
+		if (((token_char.isupper() and abs(from_row - to_row) == 2) or (player == 'x' and to_row - from_row == 2) or
+			 (player == 'o' and from_row - to_row == 2)) and abs(from_col - to_col) == 2):
+			jump_row = (to_row - from_row) / 2 + from_row
+			jump_col = (to_col - from_col) / 2 + from_col
+			if self.game_board[jump_row][jump_col].lower() not in [player, '-']:
+				return True, [jump_row, jump_col]
+		return False
 
-	def play(self, player, row, column):
+	def play(self, player, token_location, to_row, to_col, jump):
 		"""
-		play in a square, then check to see if the game is over.
+		Move selected token to a particular square, then check to see if the game is over.
 		"""
-		self.game_board[row][column] = player
-		self.turn += 1
-		winner = self.check_winner(player, row, column)
+		from_row = token_location[0]
+		from_col = token_location[1]
+		token_char = self.game_board[from_row][from_col]
+		self.game_board[to_row][to_col] = token_char
+		self.game_board[from_row][from_col] = '-'
+		if (player == 'x' and to_row == 7) or (player == 'o' and to_row == 0):
+			self.game_board[to_row][to_col] = token_char.upper()
+		if jump:
+			self.game_board[jump[0], jump[1]] = '-'
+			self.selected_token = [to_row, to_col]
+		else:
+			self.turn += 1
+			self.selected_token = None
+		winner = self.check_winner()
 		if winner is None:
-			pygame.display.set_caption("%s's turn" % game.players[game.turn % 2])
+			pygame.display.set_caption("%s's turn" % self.players[self.turn % 2])
 		elif winner == 'draw':
-			pygame.display.set_caption("Cat's Game! Click to start again")
+			pygame.display.set_caption("It's a stalemate! Click to start again")
 			self.status = 'game over'
 		else:
 			pygame.display.set_caption("%s wins! Click to start again" % winner)
