@@ -144,19 +144,17 @@ class Game:
 # Helper functions:
 def get_clicked_column(mouse_pos):
 	x = mouse_pos[0]
-	if x < WIDTH / 3:
-		return 0
-	if x < 2 * WIDTH / 3:
-		return 1
-	return 2
+	for i in range(1, 8):
+		if x < i * WIDTH / 8:
+			return i - 1
+	return 7
 
 def get_clicked_row(mouse_pos):
 	y = mouse_pos[1]
-	if y < HEIGHT / 3:
-		return 0
-	if y < 2 * HEIGHT / 3:
-		return 1
-	return 2
+	for i in range(1, 8):
+		if y < i * HEIGHT / 8:
+			return i - 1
+	return 7
 
 def transpose(board):
 	return [[board[col][row] for col in range(len(board[row]))] for row in range(len(board))]
