@@ -27,6 +27,7 @@ class Game:
 		rando = random.randrange(0,2)
 		self.ai = self.players[rando]
 		self.human = self.players[1 - rando]
+		self.selected_token = None
 		pygame.display.set_caption("%s's turn" % self.players[self.turn % 2])
 		self.game_board = [['X','-','X','-','X','-','X','-'],
 						   ['-','X','-','X','-','X','-','X'],
@@ -47,10 +48,25 @@ class Game:
 		"""
 		if self.status == 'playing':
 			row, column = get_clicked_row(mouse_pos), get_clicked_column(mouse_pos)
-			if self.is_empty(row, column):
-				self.play(self.players[self.turn % 2], row, column)
+			if self.selected_token:
+				if self.is_valid_move(self.players[self.turn % 2], self.selected_token, row, column):
+					self.play(self.players[self.turn % 2], self.selected_token, row, column)
+				elif row == self.selected_token[0] and col == self.selected_token[1]:
+					self.selected_token = None
+				else:
+					print 'invalid move'
+			else:
+				if self.game_board[row][col] == self.players[self.turn % 2]:
+					self.selected_token = [row, col]
 		elif self.status == 'game over':
 			self.__init__()
+
+	def is_valid_move(self, player, token_location, to_row, to_col):
+		from_row = token_location[0]
+		from_col = token_location[1]
+		if self.game_board[to_row][to_col] != '-':
+			return False
+		if abs(from_row - to_row) == 1 and abs(from_col - to_col) == 1: return True
 
 	def play(self, player, row, column):
 		"""
