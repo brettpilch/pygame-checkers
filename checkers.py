@@ -128,19 +128,17 @@ class Game:
 		"""
 		Draw the game board and the X's and O's.
 		"""
-		pygame.draw.line(screen, WHITE, [WIDTH / 3, 0], [WIDTH / 3, HEIGHT], 10)
-		pygame.draw.line(screen, WHITE, [2 * WIDTH / 3, 0], [2 * WIDTH / 3, HEIGHT], 10)
-		pygame.draw.line(screen, WHITE, [0, HEIGHT / 3], [WIDTH, HEIGHT / 3], 10)
-		pygame.draw.line(screen, WHITE, [0, 2 * HEIGHT / 3], [WIDTH, 2 * HEIGHT / 3], 10)
-		pygame.draw.rect(screen, WHITE, [0,0,WIDTH,HEIGHT], 10)
+		for i in range(9):
+			pygame.draw.line(screen, WHITE, [i * WIDTH / 8, 0], [i * WIDTH / 8, HEIGHT], 5)
+			pygame.draw.line(screen, WHITE, [0, i * HEIGHT / 8], [WIDTH, i * HEIGHT / 8], 5)
 		font = pygame.font.SysFont('Calibri', MARK_SIZE, False, False)
 		for r in range(len(self.game_board)):
 			for c in range(len(self.game_board[r])):
 				mark = self.game_board[r][c]
 				if mark != '-':
 					mark_text = font.render(self.game_board[r][c], True, WHITE)
-					x = WIDTH / 3 * c + WIDTH / 6
-					y = HEIGHT / 3 * r + HEIGHT / 6
+					x = WIDTH / 8 * c + WIDTH / 16
+					y = HEIGHT / 8 * r + HEIGHT / 16
 					screen.blit(mark_text, [x - mark_text.get_width() / 2, y - mark_text.get_height() / 2])
 
 # Helper functions:
