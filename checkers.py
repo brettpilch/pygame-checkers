@@ -14,6 +14,7 @@ TRANS    = (   1,   2,   3)
 # CONSTANTS:
 WIDTH = 700
 HEIGHT = 700
+MARK_SIZE = 50
 
 class Game:
 	"""class to keep track of the status of the game."""
@@ -53,13 +54,13 @@ class Game:
 				move = self.is_valid_move(self.players[self.turn % 2], self.selected_token, row, column)
 				if move[0]:
 					self.play(self.players[self.turn % 2], self.selected_token, row, column, move[1])
-				elif row == self.selected_token[0] and col == self.selected_token[1]:
+				elif row == self.selected_token[0] and column == self.selected_token[1]:
 					self.selected_token = None
 				else:
 					print 'invalid move'
 			else:
-				if self.game_board[row][col].lower() == self.players[self.turn % 2]:
-					self.selected_token = [row, col]
+				if self.game_board[row][column].lower() == self.players[self.turn % 2]:
+					self.selected_token = [row, column]
 		elif self.status == 'game over':
 			self.__init__()
 
@@ -81,7 +82,7 @@ class Game:
 			jump_col = (to_col - from_col) / 2 + from_col
 			if self.game_board[jump_row][jump_col].lower() not in [player, '-']:
 				return True, [jump_row, jump_col]
-		return False
+		return False, None
 
 	def play(self, player, token_location, to_row, to_col, jump):
 		"""
@@ -95,7 +96,7 @@ class Game:
 		if (player == 'x' and to_row == 7) or (player == 'o' and to_row == 0):
 			self.game_board[to_row][to_col] = token_char.upper()
 		if jump:
-			self.game_board[jump[0], jump[1]] = '-'
+			self.game_board[jump[0]][jump[1]] = '-'
 			self.selected_token = [to_row, to_col]
 		else:
 			self.turn += 1
@@ -135,8 +136,12 @@ class Game:
 		for r in range(len(self.game_board)):
 			for c in range(len(self.game_board[r])):
 				mark = self.game_board[r][c]
+				color = WHITE
+				if self.selected_token:
+					if self.selected_token[0] == r and self.selected_token[1] == c:
+						color = YELLOW
 				if mark != '-':
-					mark_text = font.render(self.game_board[r][c], True, WHITE)
+					mark_text = font.render(self.game_board[r][c], True, color)
 					x = WIDTH / 8 * c + WIDTH / 16
 					y = HEIGHT / 8 * r + HEIGHT / 16
 					screen.blit(mark_text, [x - mark_text.get_width() / 2, y - mark_text.get_height() / 2])
@@ -176,8 +181,6 @@ clock = pygame.time.Clock()
 # game loop:
 while not done:
     # --- Main event loop
-    if game.status == 'playing':
-    	game.ai_play(game.ai_choice())
     for event in pygame.event.get(): # User did something
         if event.type == pygame.QUIT: # If user clicked close
             done = True # Flag that we are done so we exit this loop
