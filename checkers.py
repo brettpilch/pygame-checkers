@@ -110,28 +110,19 @@ class Game:
 			pygame.display.set_caption("%s wins! Click to start again" % winner)
 			self.status = 'game over'
 
-	def check_winner(self, player, row, column):
+	def check_winner(self):
 		"""
 		check to see if someone won, or if it is a draw.
 		"""
-		if self.game_board[row].count(player) == 3:
-			return player
-		if (self.game_board[0][column] == player and
-			self.game_board[1][column] == player and 
-			self.game_board[2][column] == player):
-			return player
-		if ((self.game_board[0][0] == player and
-			 self.game_board[1][1] == player and
-			 self.game_board[2][2] == player) or
-			(self.game_board[0][2] == player and
-			 self.game_board[1][1] == player and
-			 self.game_board[2][0] == player)):
-			return player
-		flat = [mark for row in self.game_board for mark in row]
-		if flat.count('-') == 0:
+		x = sum([row.count('x') + row.count('X') for row in self.game_board])
+		if x == 0:
+			return 'o'
+		o = sum([row.count('o') + row.count('O') for row in self.game_board])
+		if o == 0:
+			return 'x'
+		if x == 1 and o == 1:
 			return 'draw'
 		return None
-			
 
 	def draw(self):
 		"""
