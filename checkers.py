@@ -23,12 +23,10 @@ class Game:
 		Start a new game with an empty board and random player going first.
 		"""
 		self.status = 'playing'
-		self.turn = 0
+		self.turn = random.randrange(2)
 		self.players = ['x','o']
-		rando = random.randrange(0,2)
-		self.ai = self.players[rando]
-		self.human = self.players[1 - rando]
 		self.selected_token = None
+		self.jumping = False
 		pygame.display.set_caption("%s's turn" % self.players[self.turn % 2])
 		self.game_board = [['x','-','x','-','x','-','x','-'],
 						   ['-','x','-','x','-','x','-','x'],
@@ -38,9 +36,6 @@ class Game:
 						   ['-','o','-','o','-','o','-','o'],
 						   ['o','-','o','-','o','-','o','-'],
 						   ['-','o','-','o','-','o','-','o']]
-
-	def is_empty(self, row, column):
-		return self.game_board[row][column] == '-'
 
 	def evaluate_click(self, mouse_pos):
 		"""
@@ -56,6 +51,9 @@ class Game:
 					self.play(self.players[self.turn % 2], self.selected_token, row, column, move[1])
 				elif row == self.selected_token[0] and column == self.selected_token[1]:
 					self.selected_token = None
+					if self.jumping:
+						self.jumping = False
+						self.next_turn()
 				else:
 					print 'invalid move'
 			else:
@@ -74,7 +72,7 @@ class Game:
 		if self.game_board[to_row][to_col] != '-':
 			return False, None
 		if (((token_char.isupper() and abs(from_row - to_row) == 1) or (player == 'x' and to_row - from_row == 1) or
-			 (player == 'o' and from_row - to_row == 1)) and abs(from_col - to_col) == 1):
+			 (player == 'o' and from_row - to_row == 1)) and abs(from_col - to_col) == 1) and not self.jumping:
 			return True, None
 		if (((token_char.isupper() and abs(from_row - to_row) == 2) or (player == 'x' and to_row - from_row == 2) or
 			 (player == 'o' and from_row - to_row == 2)) and abs(from_col - to_col) == 2):
@@ -98,9 +96,10 @@ class Game:
 		if jump:
 			self.game_board[jump[0]][jump[1]] = '-'
 			self.selected_token = [to_row, to_col]
+			self.jumping = True
 		else:
-			self.turn += 1
 			self.selected_token = None
+			self.next_turn()
 		winner = self.check_winner()
 		if winner is None:
 			pygame.display.set_caption("%s's turn" % self.players[self.turn % 2])
@@ -110,6 +109,10 @@ class Game:
 		else:
 			pygame.display.set_caption("%s wins! Click to start again" % winner)
 			self.status = 'game over'
+
+	def next_turn(self):
+		self.turn += 1
+		pygame.display.set_caption("%s's turn" % self.players[self.turn % 2])
 
 	def check_winner(self):
 		"""
@@ -136,10 +139,13 @@ class Game:
 		for r in range(len(self.game_board)):
 			for c in range(len(self.game_board[r])):
 				mark = self.game_board[r][c]
-				color = WHITE
+				if self.players[self.turn % 2] == mark.lower():
+					color = YELLOW
+				else:
+					color = WHITE
 				if self.selected_token:
 					if self.selected_token[0] == r and self.selected_token[1] == c:
-						color = YELLOW
+						color = RED
 				if mark != '-':
 					mark_text = font.render(self.game_board[r][c], True, color)
 					x = WIDTH / 8 * c + WIDTH / 16
@@ -160,9 +166,6 @@ def get_clicked_row(mouse_pos):
 		if y < i * HEIGHT / 8:
 			return i - 1
 	return 7
-
-def transpose(board):
-	return [[board[col][row] for col in range(len(board[row]))] for row in range(len(board))]
 
 # start pygame:
 pygame.init()
